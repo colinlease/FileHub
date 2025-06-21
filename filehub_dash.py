@@ -44,6 +44,13 @@ def list_active_filehub_objects_ui():
     total_mb = total_bytes / (1024 * 1024)
     st.markdown(f"**Total Active File Size:** `{total_mb:.2f} MB`")
     st.markdown(f"**Active File Count:** `{len(active_files)}`")
+
+    all_objects = response["Contents"]
+    total_file_count = len(all_objects)
+    total_file_size = sum(obj["Size"] for obj in all_objects) / (1024 * 1024)
+    st.markdown(f"**Total File Size:** `{total_file_size:.2f} MB`")
+    st.markdown(f"**Total File Count:** `{total_file_count}`")
+
     st.markdown("<br>", unsafe_allow_html=True)
 
     for obj in sorted(active_files, key=lambda x: x["LastModified"], reverse=True):
