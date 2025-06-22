@@ -79,7 +79,7 @@ def list_active_filehub_objects_ui():
 
     st.markdown("### Active Tokens")
 
-    for obj in sorted(active_files, key=lambda x: x["LastModified"], reverse=True):
+    for obj in sorted(active_files, key=lambda x: (datetime.utcnow() - x["LastModified"].replace(tzinfo=None)).total_seconds(), reverse=False):
         key = obj["Key"]
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age = (now - last_modified).total_seconds()
