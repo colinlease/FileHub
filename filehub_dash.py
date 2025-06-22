@@ -49,7 +49,7 @@ def delete_expired_files():
                 st.warning(f"Failed to delete {obj['Key']}: {e}")
 
 def list_active_filehub_objects_ui():
-    st.header("📂 FileHub (S3) Admin Dashboard")
+    st.header("📂 FileHub (S3) Admin Console")
     st.markdown("<br><br>", unsafe_allow_html=True)
 
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
