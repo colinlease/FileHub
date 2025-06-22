@@ -116,21 +116,7 @@ def list_active_filehub_objects_ui():
         age = (now - last_modified).total_seconds()
         time_remaining = max(0, 900 - int(age))  # 15 min TTL
 
-        # Updated time_str logic
-        if time_remaining < 60:
-            time_str = "less than 1 minute"
-        else:
-            hours = int(time_remaining // 3600)
-            minutes = int((time_remaining % 3600) // 60)
-            time_str = f"{hours} hours {minutes} minutes"
-
-        # Color logic
-        if time_remaining < 21600:  # less than 6 hours
-            color = "red"
-        elif time_remaining < 43200:  # 6 to 12 hours
-            color = "orange"
-        else:  # 12+ hours
-            color = "green"
+        time_str = f"{int(time_remaining)} seconds"
 
         token_masked_key = key
         if "/" in key and "__" in key:
@@ -146,7 +132,7 @@ def list_active_filehub_objects_ui():
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
         col3.markdown(
-            f"<span style='font-family:monospace'>Deletes in <span style='color:{color}'>{time_str}</span></span>",
+            f"<span style='font-family:monospace'>Deletes in {time_str}</span>",
             unsafe_allow_html=True
         )
     st.markdown("---")
