@@ -4,6 +4,7 @@
 import boto3
 import os
 from datetime import datetime
+from datetime import timedelta
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
@@ -24,6 +25,22 @@ s3_client = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     region_name=S3_REGION
 )
+
+def delete_expired_files():
+    """Delete files older than 15 minutes from S3 bucket."""
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+    if "Contents" not in response:
+        return
+
+    now = datetime.utcnow()
+    for obj in response["Contents"]:
+        last_modified = obj["LastModified"].replace(tzinfo=None)
+        age_seconds = (now - last_modified).total_seconds()
+        if age_seconds > 900:  # Older than 15 minutes
+            try:
+                s3_client.delete_object(Bucket=S3_BUCKET_NAME, Key=obj["Key"])
+            except Exception as e:
+                st.warning(f"Failed to delete {obj['Key']}: {e}")
 
 def list_active_filehub_objects_ui():
     st.header("📂 Current Files in FileHub (S3)")
@@ -54,7 +71,7 @@ def list_active_filehub_objects_ui():
     col3.markdown(f"**Total File Size:** `{total_file_size:.2f} MB`")
     col4.markdown(f"**Total File Count:** `{total_file_count}`")
 
-    st.markdown("### 📁 Active Tokens")
+    st.markdown("### 🟢 Active Tokens")
 
     for obj in sorted(active_files, key=lambda x: x["LastModified"], reverse=True):
         key = obj["Key"]
@@ -130,4 +147,5 @@ def list_active_filehub_objects_ui():
 if __name__ == "__main__":
     st.set_page_config(page_title="Admin Console – FileHub Backend Transfers")
     st_autorefresh(interval=1000, key="auto-refresh")
+    delete_expired_files()
     list_active_filehub_objects_ui()
