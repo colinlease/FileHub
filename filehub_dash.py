@@ -86,7 +86,8 @@ def list_active_filehub_objects_ui():
 
     st.markdown("---")
     st.subheader("📁 All Files in S3 (including expired)")
-    for obj in sorted(all_objects, key=lambda x: x["LastModified"], reverse=True):
+    all_objects_sorted = sorted(all_objects, key=lambda x: 86400 - (now - x["LastModified"].replace(tzinfo=None)).total_seconds())
+    for obj in all_objects_sorted:
         if obj in active_files:
             continue
         key = obj["Key"]
@@ -115,10 +116,12 @@ def list_active_filehub_objects_ui():
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
         color = "green"
-        if time_remaining < 180:
+        if time_remaining < 21600:  # less than 6 hours
             color = "red"
-        elif time_remaining < 450:
+        elif time_remaining < 43200:  # 6 to 12 hours
             color = "orange"
+        else:  # 12+ hours
+            color = "green"
         col3.markdown(
             f"<span style='font-family:monospace'>Deletes in <span style='color:{color}'>{time_str}</span></span>",
             unsafe_allow_html=True
