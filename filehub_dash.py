@@ -54,7 +54,7 @@ def list_active_filehub_objects_ui():
     col3.markdown(f"**Total File Size:** `{total_file_size:.2f} MB`")
     col4.markdown(f"**Total File Count:** `{total_file_count}`")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### 🟢 Active Tokens")
 
     for obj in sorted(active_files, key=lambda x: x["LastModified"], reverse=True):
         key = obj["Key"]
@@ -71,7 +71,7 @@ def list_active_filehub_objects_ui():
                     masked_token = "XXXXXX" + token[-2:]
                     token_masked_key = f"{prefix}/{masked_token}__{filename}"
         file_size_mb = obj["Size"] / (1024 * 1024)
-        col1, col2, col3 = st.columns([6, 2, 3])
+        col1, col2, col3 = st.columns([7, 2, 3])
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
         color = "green"
@@ -93,6 +93,14 @@ def list_active_filehub_objects_ui():
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age = (now - last_modified).total_seconds()
         time_remaining = max(0, 86400 - int(age))  # Assume 1-day retention
+
+        if time_remaining < 60:
+            time_str = "less than 1 minute"
+        else:
+            hours = time_remaining // 3600
+            minutes = (time_remaining % 3600) // 60
+            time_str = f"{int(hours)}h {int(minutes)}m"
+
         token_masked_key = key
         if "/" in key and "__" in key:
             prefix, rest = key.split("/", 1)
@@ -103,7 +111,7 @@ def list_active_filehub_objects_ui():
                     masked_token = "XXXXXX" + token[-2:]
                     token_masked_key = f"{prefix}/{masked_token}__{filename}"
         file_size_mb = obj["Size"] / (1024 * 1024)
-        col1, col2, col3 = st.columns([6, 2, 3])
+        col1, col2, col3 = st.columns([7, 2, 3])
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
         color = "green"
@@ -112,7 +120,7 @@ def list_active_filehub_objects_ui():
         elif time_remaining < 450:
             color = "orange"
         col3.markdown(
-            f"<span style='font-family:monospace'>Deletes in <span style='color:{color}'>{time_remaining}</span> sec</span>",
+            f"<span style='font-family:monospace'>Deletes in <span style='color:{color}'>{time_str}</span></span>",
             unsafe_allow_html=True
         )
 
