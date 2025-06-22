@@ -71,7 +71,7 @@ def list_active_filehub_objects_ui():
                     masked_token = "XXXXXX" + token[-2:]
                     token_masked_key = f"{prefix}/{masked_token}__{filename}"
         file_size_mb = obj["Size"] / (1024 * 1024)
-        col1, col2, col3 = st.columns([7, 2, 3])
+        col1, col2, col3 = st.columns([8, 1.5, 2.5])
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
         color = "green"
@@ -112,7 +112,7 @@ def list_active_filehub_objects_ui():
                     masked_token = "XXXXXX" + token[-2:]
                     token_masked_key = f"{prefix}/{masked_token}__{filename}"
         file_size_mb = obj["Size"] / (1024 * 1024)
-        col1, col2, col3 = st.columns([7, 2, 3])
+        col1, col2, col3 = st.columns([8, 1.5, 2.5])
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
         color = "green"
