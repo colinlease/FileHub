@@ -38,6 +38,12 @@ def delete_expired_files():
         age_seconds = (now - last_modified).total_seconds()
         if age_seconds > 900:  # Older than 15 minutes
             try:
+                if "deletion_log" not in st.session_state:
+                    st.session_state["deletion_log"] = []
+
+                st.session_state["deletion_log"].append(
+                    f"Deleted {obj['Key']} at {now.strftime('%Y-%m-%d %H:%M:%S')} UTC"
+                )
                 s3_client.delete_object(Bucket=S3_BUCKET_NAME, Key=obj["Key"])
             except Exception as e:
                 st.warning(f"Failed to delete {obj['Key']}: {e}")
@@ -143,6 +149,14 @@ def list_active_filehub_objects_ui():
             f"<span style='font-family:monospace'>Deletes in <span style='color:{color}'>{time_str}</span></span>",
             unsafe_allow_html=True
         )
+    st.markdown("---")
+    st.subheader("🗑️ Recent Deletions (Logged This Session)")
+
+    if "deletion_log" in st.session_state:
+        for entry in st.session_state["deletion_log"]:
+            st.markdown(f"- `{entry}`")
+    else:
+        st.info("No deletions recorded this session.")
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Admin Console – FileHub Backend Transfers")
