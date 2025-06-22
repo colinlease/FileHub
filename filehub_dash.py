@@ -77,7 +77,7 @@ def list_active_filehub_objects_ui():
     col3.markdown(f"**Total File Size:** `{total_file_size:.2f} MB`")
     col4.markdown(f"**Total File Count:** `{total_file_count}`")
 
-    st.markdown("### 🟢 Active Tokens")
+    st.markdown("### Active Tokens")
 
     for obj in sorted(active_files, key=lambda x: x["LastModified"], reverse=True):
         key = obj["Key"]
@@ -108,22 +108,15 @@ def list_active_filehub_objects_ui():
         )
 
     st.markdown("---")
-    st.subheader("📁 All Files in S3 (including expired)")
+    st.subheader("All Files in S3 (including expired)")
     all_objects_sorted = sorted(all_objects, key=lambda x: 86400 - (now - x["LastModified"].replace(tzinfo=None)).total_seconds())
     for obj in all_objects_sorted:
-        if obj in active_files:
-            continue
         key = obj["Key"]
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age = (now - last_modified).total_seconds()
-        time_remaining = max(0, 86400 - int(age))  # Assume 1-day retention
+        time_remaining = max(0, 900 - int(age))  # 15 min TTL
 
-        if time_remaining < 60:
-            time_str = "less than 1 minute"
-        else:
-            hours = time_remaining // 3600
-            minutes = (time_remaining % 3600) // 60
-            time_str = f"{int(hours)}h {int(minutes)}m"
+        time_str = f"{int(time_remaining)} seconds"
 
         token_masked_key = key
         if "/" in key and "__" in key:
