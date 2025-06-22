@@ -54,7 +54,7 @@ def list_active_filehub_objects_ui():
     col3.markdown(f"**Total File Size:** `{total_file_size:.2f} MB`")
     col4.markdown(f"**Total File Count:** `{total_file_count}`")
 
-    st.markdown("### 🟢 Active Tokens")
+    st.markdown("### 📁 Active Tokens")
 
     for obj in sorted(active_files, key=lambda x: x["LastModified"], reverse=True):
         key = obj["Key"]
