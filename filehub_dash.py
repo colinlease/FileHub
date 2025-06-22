@@ -81,7 +81,6 @@ def list_active_filehub_objects_ui():
     total_gb_used = total_file_size / 1024
     total_gb_cap = 5.0
     usage_ratio = min(total_gb_used / total_gb_cap, 1.0)
-    st.markdown("**Storage Used:**")
     st.progress(usage_ratio)
     st.markdown(f"{total_gb_used:.2f} GB used of {total_gb_cap:.2f} GB ({usage_ratio * 100:.1f}%)")
 
