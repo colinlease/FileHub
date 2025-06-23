@@ -26,9 +26,17 @@ s3_client = boto3.client(
     region_name=S3_REGION
 )
 
+if "run_id" not in st.session_state:
+    st.session_state["run_id"] = str(datetime.utcnow())
+
+@st.cache_data(ttl=300)
+def get_cached_s3_listing(run_id):
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+    return response.get("Contents", [])
+
 def delete_expired_files():
     """Delete files older than 15 minutes from S3 bucket."""
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+    response = {"Contents": get_cached_s3_listing(st.session_state["run_id"])}
     if "Contents" not in response:
         return
 
@@ -52,7 +60,7 @@ def list_active_filehub_objects_ui():
     st.header("📂 FileHub (S3) Admin Console")
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+    response = {"Contents": get_cached_s3_listing(st.session_state["run_id"])}
     if "Contents" not in response:
         st.info("No files currently stored.")
         return
@@ -90,7 +98,7 @@ def list_active_filehub_objects_ui():
         key = obj["Key"]
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age = (now - last_modified).total_seconds()
-        time_remaining = max(0, 900 - int(age))  # 15 min TTL = 900 sec
+        time_remaining = 900 - int(age)  # can be negative
         token_masked_key = key
         if "/" in key and "__" in key:
             prefix, rest = key.split("/", 1)
@@ -104,15 +112,21 @@ def list_active_filehub_objects_ui():
         col1, col2, col3 = st.columns([8, 1.5, 2.5])
         col1.markdown(f"**{token_masked_key}**")
         col2.markdown(f"`{file_size_mb:.2f} MB`")
-        color = "green"
-        if time_remaining < 180:
-            color = "red"
-        elif time_remaining < 450:
-            color = "orange"
-        col3.markdown(
-            f"<span style='font-family:monospace'>Expires in <span style='color:{color}'>{time_remaining}</span> sec</span>",
-            unsafe_allow_html=True
-        )
+        if time_remaining < 0:
+            col3.markdown(
+                f"<span style='font-family:monospace; color:red'>EXPIRED {-time_remaining} sec ago</span>",
+                unsafe_allow_html=True
+            )
+        else:
+            color = "green"
+            if time_remaining < 180:
+                color = "red"
+            elif time_remaining < 450:
+                color = "orange"
+            col3.markdown(
+                f"<span style='font-family:monospace'>Expires in <span style='color:{color}'>{time_remaining}</span> sec</span>",
+                unsafe_allow_html=True
+            )
 
     st.markdown("---")
     st.subheader("All Files in S3 (including expired)")
@@ -121,9 +135,12 @@ def list_active_filehub_objects_ui():
         key = obj["Key"]
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age = (now - last_modified).total_seconds()
-        time_remaining = max(0, 900 - int(age))  # 15 min TTL
+        time_remaining = 900 - int(age)  # 15 min TTL
 
-        time_str = f"{int(time_remaining)} seconds"
+        if time_remaining < 0:
+            time_str = f"Expired {-int(time_remaining)} sec ago (may be deleted)"
+        else:
+            time_str = f"{int(time_remaining)} seconds"
 
         token_masked_key = key
         if "/" in key and "__" in key:
@@ -154,5 +171,5 @@ def list_active_filehub_objects_ui():
 if __name__ == "__main__":
     st.set_page_config(page_title="Admin Console – FileHub Backend Transfers")
     st_autorefresh(interval=1000, key="auto-refresh")
-    delete_expired_files()
+    # delete_expired_files()
     list_active_filehub_objects_ui()
