@@ -26,32 +26,6 @@ s3_client = boto3.client(
     region_name=S3_REGION
 )
 
-
-# --- S3 refresh and cleanup logic (runs on every reload/autorefresh) ---
-now = datetime.utcnow()
-if "run_id" not in st.session_state:
-    st.session_state["run_id"] = str(now)
-if "last_s3_refresh_time" not in st.session_state:
-    st.session_state["last_s3_refresh_time"] = now
-if "has_run_deletion_once" not in st.session_state:
-    st.session_state["has_run_deletion_once"] = False
-
-# Run delete_expired_files() immediately on first load
-if not st.session_state["has_run_deletion_once"]:
-    delete_expired_files()
-    st.session_state["has_run_deletion_once"] = True
-
-# Then run again every 5 minutes
-elif (now - st.session_state["last_s3_refresh_time"]).total_seconds() > 300:
-    st.session_state["run_id"] = str(now)
-    delete_expired_files()
-    st.session_state["last_s3_refresh_time"] = now
-
-@st.cache_data(ttl=300)
-def get_cached_s3_listing(run_id):
-    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
-    return response.get("Contents", [])
-
 def delete_expired_files():
     """Delete files older than 15 minutes from S3 bucket."""
     now = datetime.utcnow()
@@ -81,6 +55,31 @@ def delete_expired_files():
                 st.write(f"✅ Deleted: {obj['Key']}")
             except Exception as e:
                 st.warning(f"❌ Failed to delete {obj['Key']}: {e}")
+
+# --- S3 refresh and cleanup logic (runs on every reload/autorefresh) ---
+now = datetime.utcnow()
+if "run_id" not in st.session_state:
+    st.session_state["run_id"] = str(now)
+if "last_s3_refresh_time" not in st.session_state:
+    st.session_state["last_s3_refresh_time"] = now
+if "has_run_deletion_once" not in st.session_state:
+    st.session_state["has_run_deletion_once"] = False
+
+# Run delete_expired_files() immediately on first load
+if not st.session_state["has_run_deletion_once"]:
+    delete_expired_files()
+    st.session_state["has_run_deletion_once"] = True
+
+# Then run again every 5 minutes
+elif (now - st.session_state["last_s3_refresh_time"]).total_seconds() > 300:
+    st.session_state["run_id"] = str(now)
+    delete_expired_files()
+    st.session_state["last_s3_refresh_time"] = now
+
+@st.cache_data(ttl=300)
+def get_cached_s3_listing(run_id):
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+    return response.get("Contents", [])
 
 def list_active_filehub_objects_ui():
     st.header("📂 FileHub (S3) Admin Console")
