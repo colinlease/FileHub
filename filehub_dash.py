@@ -47,12 +47,13 @@ def get_cached_s3_listing(run_id):
 
 def delete_expired_files():
     """Delete files older than 15 minutes from S3 bucket."""
-    response = {"Contents": get_cached_s3_listing(st.session_state["run_id"])}
-    if "Contents" not in response:
+    response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
+    contents = response.get("Contents", [])
+    if not contents:
         return
 
     now = datetime.utcnow()
-    for obj in response["Contents"]:
+    for obj in contents:
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age_seconds = (now - last_modified).total_seconds()
         if age_seconds > 900:  # Older than 15 minutes
