@@ -33,9 +33,16 @@ if "run_id" not in st.session_state:
     st.session_state["run_id"] = str(now)
 if "last_s3_refresh_time" not in st.session_state:
     st.session_state["last_s3_refresh_time"] = now
+if "has_run_deletion_once" not in st.session_state:
+    st.session_state["has_run_deletion_once"] = False
 
-# Refresh S3 and delete expired files every 5 minutes
-if (now - st.session_state["last_s3_refresh_time"]).total_seconds() > 300:
+# Run delete_expired_files() immediately on first load
+if not st.session_state["has_run_deletion_once"]:
+    delete_expired_files()
+    st.session_state["has_run_deletion_once"] = True
+
+# Then run again every 5 minutes
+elif (now - st.session_state["last_s3_refresh_time"]).total_seconds() > 300:
     st.session_state["run_id"] = str(now)
     delete_expired_files()
     st.session_state["last_s3_refresh_time"] = now
