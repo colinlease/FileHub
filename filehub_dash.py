@@ -83,6 +83,12 @@ def get_cached_s3_listing(run_id):
 
 def list_active_filehub_objects_ui():
     st.header("📂 FileHub (S3) Admin Console")
+    # Add Refresh Now button immediately below the header
+    if st.button("🔄 Refresh Now"):
+        now = datetime.utcnow()
+        st.session_state["run_id"] = str(now)
+        delete_expired_files()
+        st.session_state["last_s3_refresh_time"] = now
     st.markdown("<br><br>", unsafe_allow_html=True)
 
     response = {"Contents": get_cached_s3_listing(st.session_state["run_id"])}
