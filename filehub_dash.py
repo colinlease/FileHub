@@ -26,8 +26,19 @@ s3_client = boto3.client(
     region_name=S3_REGION
 )
 
+
+# --- S3 refresh and cleanup logic (runs on every reload/autorefresh) ---
+now = datetime.utcnow()
 if "run_id" not in st.session_state:
-    st.session_state["run_id"] = str(datetime.utcnow())
+    st.session_state["run_id"] = str(now)
+if "last_s3_refresh_time" not in st.session_state:
+    st.session_state["last_s3_refresh_time"] = now
+
+# Refresh S3 and delete expired files every 5 minutes
+if (now - st.session_state["last_s3_refresh_time"]).total_seconds() > 300:
+    st.session_state["run_id"] = str(now)
+    delete_expired_files()
+    st.session_state["last_s3_refresh_time"] = now
 
 @st.cache_data(ttl=300)
 def get_cached_s3_listing(run_id):
