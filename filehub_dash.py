@@ -26,14 +26,17 @@ s3_client = boto3.client(
     region_name=S3_REGION
 )
 
+if "run_id" not in st.session_state:
+    st.session_state["run_id"] = str(datetime.utcnow())
+
 @st.cache_data(ttl=300)
-def get_cached_s3_listing():
+def get_cached_s3_listing(run_id):
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
     return response.get("Contents", [])
 
 def delete_expired_files():
     """Delete files older than 15 minutes from S3 bucket."""
-    response = {"Contents": get_cached_s3_listing()}
+    response = {"Contents": get_cached_s3_listing(st.session_state["run_id"])}
     if "Contents" not in response:
         return
 
@@ -57,7 +60,7 @@ def list_active_filehub_objects_ui():
     st.header("📂 FileHub (S3) Admin Console")
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-    response = {"Contents": get_cached_s3_listing()}
+    response = {"Contents": get_cached_s3_listing(st.session_state["run_id"])}
     if "Contents" not in response:
         st.info("No files currently stored.")
         return
