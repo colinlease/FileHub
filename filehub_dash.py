@@ -29,11 +29,9 @@ s3_client = boto3.client(
 def delete_expired_files():
     """Delete files older than 15 minutes from S3 bucket."""
     now = datetime.utcnow()
-    st.write(f"🔍 Deletion check running at {now.strftime('%Y-%m-%d %H:%M:%S')} UTC")
 
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET_NAME)
     contents = response.get("Contents", [])
-    st.write(f"Found {len(contents)} objects in S3")
 
     if not contents:
         return
@@ -41,7 +39,6 @@ def delete_expired_files():
     for obj in contents:
         last_modified = obj["LastModified"].replace(tzinfo=None)
         age_seconds = (now - last_modified).total_seconds()
-        st.write(f"File: {obj['Key']}, Age: {age_seconds:.2f} sec")
 
         if age_seconds > 900:  # Older than 15 minutes
             try:
@@ -52,7 +49,6 @@ def delete_expired_files():
                     f"Deleted {obj['Key']} at {now.strftime('%Y-%m-%d %H:%M:%S')} UTC"
                 )
                 s3_client.delete_object(Bucket=S3_BUCKET_NAME, Key=obj["Key"])
-                st.write(f"✅ Deleted: {obj['Key']}")
             except Exception as e:
                 st.warning(f"❌ Failed to delete {obj['Key']}: {e}")
 
